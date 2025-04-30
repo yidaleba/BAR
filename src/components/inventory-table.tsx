@@ -21,7 +21,7 @@ export default function InventoryTable({ items, onDeleteItem }: InventoryTablePr
   return (
     <ScrollArea className="h-[60vh] border rounded-md">
       <Table>
-        <TableHeader className="sticky top-0 bg-card z-10"> {/* Make header sticky */}
+        <TableHeader className="sticky top-0 bg-card z-10">
           <TableRow>
             <TableHead className="w-[200px]">Nombre</TableHead>
             <TableHead>Categoría</TableHead>
