@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link'; // Import Link
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, LogOut, Package, ClipboardList } from 'lucide-react'; // Import Package and ClipboardList icons
+import { LayoutDashboard, LogOut, Package, ClipboardList, Music } from 'lucide-react'; // Import Music icon
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -83,13 +83,18 @@ export default function AdminDashboardPage() {
              </Link>
           </CardContent>
         </Card>
+         {/* Updated Card for Music Requests */}
          <Card>
           <CardHeader>
-            <CardTitle>Configuración</CardTitle>
+             <CardTitle className="flex items-center"><Music className="mr-2 h-5 w-5"/> Solicitudes de Música</CardTitle>
           </CardHeader>
           <CardContent>
-            <p>Ajustes generales del sistema.</p>
-             <Button className="mt-4 w-full" disabled>Próximamente</Button>
+            <p>Revisa las canciones solicitadas por los usuarios.</p>
+            <Link href="/admin/music-requests" passHref legacyBehavior>
+                <Button className="mt-4 w-full">
+                     Ver Solicitudes
+                 </Button>
+            </Link>
           </CardContent>
         </Card>
       </div>
