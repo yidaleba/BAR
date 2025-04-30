@@ -1,0 +1,74 @@
+{
+  "items": [
+    {
+      "id": 1,
+      "name": "Cerveza Lager",
+      "price": 3.50,
+      "category": "Cervezas",
+      "description": "Clásica y refrescante."
+    },
+    {
+      "id": 2,
+      "name": "Cerveza IPA",
+      "price": 4.50,
+      "category": "Cervezas",
+      "description": "Amarga con notas cítricas."
+    },
+    {
+      "id": 3,
+      "name": "Vino Tinto (Copa)",
+      "price": 5.00,
+      "category": "Vinos",
+      "description": "Selección de la casa."
+    },
+    {
+      "id": 4,
+      "name": "Vino Blanco (Copa)",
+      "price": 5.00,
+      "category": "Vinos",
+      "description": "Fresco y afrutado."
+    },
+    {
+      "id": 5,
+      "name": "Mojito",
+      "price": 7.00,
+      "category": "Cócteles",
+      "description": "Ron, menta, lima, azúcar, soda."
+    },
+    {
+      "id": 6,
+      "name": "Margarita",
+      "price": 7.50,
+      "category": "Cócteles",
+      "description": "Tequila, triple sec, lima."
+    },
+    {
+      "id": 7,
+      "name": "Patatas Bravas",
+      "price": 4.00,
+      "category": "Tapas",
+      "description": "Patatas con salsa picante."
+    },
+    {
+      "id": 8,
+      "name": "Calamares Fritos",
+      "price": 6.50,
+      "category": "Tapas",
+      "description": "Anillas de calamar rebozadas."
+    },
+    {
+      "id": 9,
+      "name": "Refresco",
+      "price": 2.50,
+      "category": "Sin Alcohol",
+      "description": "Cola, naranja, limón."
+    },
+    {
+      "id": 10,
+      "name": "Agua Mineral",
+      "price": 2.00,
+      "category": "Sin Alcohol",
+      "description": "Con o sin gas."
+    }
+  ]
+}
