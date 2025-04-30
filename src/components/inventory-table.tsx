@@ -23,27 +23,28 @@ export default function InventoryTable({ items, onDeleteItem }: InventoryTablePr
       <Table>
         <TableHeader className="sticky top-0 bg-card z-10">
           <TableRow>
-            <TableHead className="w-[200px]">Nombre</TableHead>
-            <TableHead>Categoría</TableHead>
+            <TableHead className="w-[250px]">Nombre</TableHead> {/* Adjusted width */}
+            {/* Category column removed */}
+             <TableHead>Descripción</TableHead> {/* Added Description */}
             <TableHead className="text-right">Precio</TableHead>
-            {/* <TableHead className="text-right">Cantidad</TableHead> */}
             <TableHead className="text-right w-[100px]">Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {items.length === 0 && (
             <TableRow>
+              {/* Updated colspan */}
               <TableCell colSpan={4} className="h-24 text-center">
-                No hay productos en el inventario.
+                No hay productos en esta categoría.
               </TableCell>
             </TableRow>
           )}
           {items.map((item) => (
             <TableRow key={item.id}>
               <TableCell className="font-medium">{item.name}</TableCell>
-              <TableCell>{item.category}</TableCell>
+               {/* Category cell removed */}
+               <TableCell className="text-muted-foreground">{item.description || '-'}</TableCell> {/* Show description or dash */}
               <TableCell className="text-right">${item.price.toFixed(2)}</TableCell>
-              {/* <TableCell className="text-right">{item.quantity ?? 'N/A'}</TableCell> Quantity */}
               <TableCell className="text-right">
                 <Button
                   variant="ghost"

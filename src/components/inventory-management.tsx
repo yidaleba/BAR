@@ -5,33 +5,37 @@ import { useState, useEffect } from 'react';
 import menuData from '@/data/menu.json'; // Assuming menu.json is in src/data
 import AddItemForm from '@/components/add-item-form';
 import InventoryTable from '@/components/inventory-table';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import type { MenuItem } from '@/types/menu'; // Import shared type
 
-// Interface removed, using shared type from '@/types/menu'
+interface InventoryManagementProps {
+    categoryName: string; // Receive category name as prop
+}
 
-export default function InventoryManagement() {
+export default function InventoryManagement({ categoryName }: InventoryManagementProps) {
   const [inventoryItems, setInventoryItems] = useState<MenuItem[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Load initial inventory data from the imported JSON
-    // Add a placeholder quantity for display purposes if needed,
-    // or assume it's managed elsewhere if not directly in menu.json
-    const itemsWithPlaceholderQuantity = menuData.items.map(item => ({
-        ...item,
-        // quantity: item.quantity ?? 100 // Example: Default quantity if not present
-    }));
-    setInventoryItems(itemsWithPlaceholderQuantity);
-  }, []);
+    // Load and filter initial inventory data for the specific category
+    const categoryItems = menuData.items.filter(
+        item => item.category.toLowerCase() === categoryName.toLowerCase()
+    );
+    setInventoryItems(categoryItems);
+  }, [categoryName]); // Re-filter if categoryName changes
 
   // Function to add a new item (simulated - logs to console)
-  const handleAddItem = (newItem: Omit<MenuItem, 'id'>) => {
+  // Updated to automatically assign the current category
+  const handleAddItem = (newItemData: Omit<MenuItem, 'id' | 'category'>) => {
     // In a real app, this would send data to the backend to persist.
     // Here, we simulate adding by updating local state and logging.
-    const newId = Math.max(0, ...inventoryItems.map(item => item.id)) + 1; // Simple ID generation
-    const itemToAdd: MenuItem = { ...newItem, id: newId };
+    const newId = Math.max(0, ...menuData.items.map(item => item.id), ...inventoryItems.map(item => item.id)) + 1; // Simple ID generation considering all items potentially
+    const itemToAdd: MenuItem = {
+        ...newItemData,
+        id: newId,
+        category: categoryName // Assign the current category
+    };
 
     console.log("Simulating Add Item:", itemToAdd); // Log the action
 
@@ -40,9 +44,11 @@ export default function InventoryManagement() {
 
     toast({
       title: "Producto Añadido (Simulado)",
-      description: `${newItem.name} se ha añadido al inventario localmente.`,
+      description: `${newItemData.name} se ha añadido a la categoría ${categoryName} localmente.`,
     });
     // NOTE: Changes are NOT saved to menu.json here. This requires a backend.
+    // To make it reflect globally (in menuData simulation), you might push to menuData.items here.
+    // menuData.items.push(itemToAdd); // Example of modifying the imported data (only works during runtime)
   };
 
   // Function to delete an item (simulated)
@@ -57,10 +63,13 @@ export default function InventoryManagement() {
 
      toast({
        title: "Producto Eliminado (Simulado)",
-       description: `${itemToDelete?.name ?? 'El producto'} se ha eliminado del inventario localmente.`,
+       description: `${itemToDelete?.name ?? 'El producto'} se ha eliminado de la categoría ${categoryName} localmente.`,
        variant: "destructive"
      });
       // NOTE: Changes are NOT saved to menu.json here. This requires a backend.
+      // To reflect globally, you would need to filter menuData.items as well.
+      // const itemIndex = menuData.items.findIndex(item => item.id === itemId);
+      // if (itemIndex > -1) menuData.items.splice(itemIndex, 1);
   };
 
   return (
@@ -69,23 +78,25 @@ export default function InventoryManagement() {
        <Card className="lg:col-span-1 h-fit shadow-md">
          <CardHeader>
            <CardTitle>Añadir Nuevo Producto</CardTitle>
+           <CardDescription>Añadir a la categoría: <span className="font-semibold">{categoryName}</span></CardDescription>
          </CardHeader>
          <CardContent>
+           {/* Pass handleAddItem without category expectation */}
            <AddItemForm onAddItem={handleAddItem} />
          </CardContent>
        </Card>
 
-      {/* Inventory Table */}
+      {/* Inventory Table - Filtered Items */}
       <Card className="lg:col-span-2 shadow-md">
          <CardHeader>
-           <CardTitle>Inventario Actual</CardTitle>
+           <CardTitle>Inventario Actual ({categoryName})</CardTitle>
+           <CardDescription>Productos actualmente en esta categoría.</CardDescription>
          </CardHeader>
          <CardContent>
+             {/* Pass only the filtered items */}
              <InventoryTable items={inventoryItems} onDeleteItem={handleDeleteItem} />
          </CardContent>
        </Card>
-
-
     </div>
   );
 }

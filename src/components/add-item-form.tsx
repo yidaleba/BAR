@@ -18,17 +18,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea"; // Import Textarea
 import type { MenuItem } from '@/types/menu';
 
-// Define the schema based on MenuItem, excluding 'id'
+// Define the schema based on MenuItem, excluding 'id' and 'category'
 const formSchema = z.object({
   name: z.string().min(2, { message: "El nombre debe tener al menos 2 caracteres." }),
   price: z.coerce.number().positive({ message: "El precio debe ser un número positivo." }),
-  category: z.string().min(1, { message: "La categoría es requerida." }),
   description: z.string().optional(), // Description is optional
-  // quantity: z.coerce.number().int().nonnegative({ message: "La cantidad debe ser 0 o más." }), // Add quantity field as requested initially
 });
 
 interface AddItemFormProps {
-  onAddItem: (item: Omit<MenuItem, 'id'>) => void; // Callback to handle adding the item
+  // Update the callback to expect data without category
+  onAddItem: (itemData: Omit<MenuItem, 'id' | 'category'>) => void; // Callback to handle adding the item
 }
 
 export default function AddItemForm({ onAddItem }: AddItemFormProps) {
@@ -37,14 +36,13 @@ export default function AddItemForm({ onAddItem }: AddItemFormProps) {
     defaultValues: {
       name: "",
       price: '' as unknown as number, // Initialize for controlled input
-      category: "",
       description: "",
-      // quantity: '' as unknown as number, // Initialize for controlled input
     },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    onAddItem(values); // Pass validated data to the parent component
+    // Pass validated data (without category) to the parent component
+    onAddItem(values);
     form.reset(); // Reset form after successful submission
   }
 
@@ -84,19 +82,7 @@ export default function AddItemForm({ onAddItem }: AddItemFormProps) {
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="category"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Categoría</FormLabel>
-              <FormControl>
-                <Input placeholder="Ej: Cervezas" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {/* Category field removed */}
          <FormField
           control={form.control}
           name="description"
@@ -110,26 +96,6 @@ export default function AddItemForm({ onAddItem }: AddItemFormProps) {
             </FormItem>
           )}
         />
-         {/* Quantity field removed as it's not in the current menu.json structure */}
-        {/* <FormField
-          control={form.control}
-          name="quantity"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Cantidad Inicial</FormLabel>
-              <FormControl>
-                 <Input
-                     type="number"
-                     placeholder="Ej: 100"
-                     {...field}
-                     value={field.value ?? ''}
-                     onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))}
-                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        /> */}
         <Button type="submit" className="w-full">
           Añadir Producto
         </Button>
