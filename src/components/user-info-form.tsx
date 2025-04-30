@@ -33,7 +33,7 @@ export default function UserInfoForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      tableNumber: undefined,
+      tableNumber: '' as unknown as number, // Initialize with empty string to prevent controlled/uncontrolled warning
     },
   });
 
@@ -77,7 +77,14 @@ export default function UserInfoForm() {
                 <FormItem>
                   <FormLabel>Número de Mesa</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="Ej: 5" {...field} />
+                    {/* Ensure value is never undefined */}
+                    <Input
+                        type="number"
+                        placeholder="Ej: 5"
+                        {...field}
+                        value={field.value ?? ''} // Ensure value is always defined
+                        onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))} // Handle empty string case for controlled input
+                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
