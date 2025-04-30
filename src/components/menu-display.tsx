@@ -11,7 +11,17 @@ import { PlusCircle, ShoppingCart, MinusCircle, Trash2 } from 'lucide-react'; //
 import { useToast } from "@/hooks/use-toast";
 import type { MenuItem, OrderItem } from '@/types/menu'; // Import shared types
 
-// Interfaces removed, using shared types from '@/types/menu'
+// Define the structure of a placed order for storage
+interface PlacedOrder {
+  id: string; // Unique ID for the order
+  userName: string;
+  tableNumber: string;
+  items: OrderItem[];
+  total: string;
+  timestamp: number;
+  status: 'active' | 'completed'; // Add status field
+}
+
 
 export default function MenuDisplay() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -22,6 +32,7 @@ export default function MenuDisplay() {
 
   useEffect(() => {
     // Load menu data from the imported JSON
+    // Filter from the potentially modified menuData during runtime if inventory changes
     setMenuItems(menuData.items as MenuItem[]); // Assert type
 
     // Retrieve user info from localStorage
@@ -30,7 +41,7 @@ export default function MenuDisplay() {
     setUserName(storedName);
     setTableNumber(storedTable);
 
-    // Load existing order from localStorage if any
+    // Load existing temporary order from localStorage if any
     const savedOrder = localStorage.getItem('currentOrder');
     if (savedOrder) {
         try {
@@ -46,18 +57,18 @@ export default function MenuDisplay() {
                 if (isValidOrder) {
                     setOrder(parsedOrder);
                 } else {
-                     console.error("Invalid order structure in localStorage");
+                     console.error("Invalid temporary order structure in localStorage");
                      localStorage.removeItem('currentOrder');
                 }
             }
         } catch (error) {
-            console.error("Failed to parse order from localStorage", error);
+            console.error("Failed to parse temporary order from localStorage", error);
             localStorage.removeItem('currentOrder'); // Clear invalid data
         }
     }
   }, []);
 
-   // Save order to localStorage whenever it changes
+   // Save temporary order to localStorage whenever it changes
    useEffect(() => {
     // Only save if order is not empty to avoid saving empty array initially
     if (order.length > 0) {
@@ -134,20 +145,43 @@ export default function MenuDisplay() {
            return;
       }
 
-      // Here you would typically send the order to the backend
-      console.log("Placing Order:", {
-          userName,
-          tableNumber,
+      // Prepare the order object to be saved
+      const newPlacedOrder: PlacedOrder = {
+          id: crypto.randomUUID(), // Generate a unique ID
+          userName: userName,
+          tableNumber: tableNumber,
           items: order,
-          total: calculateTotal()
-      });
+          total: calculateTotal(),
+          timestamp: Date.now(),
+          status: 'active', // Initial status
+      };
 
-      // Simulate order placement
-       showToast("Pedido Realizado", `Tu pedido para la mesa ${tableNumber} ha sido enviado.`);
+       // Retrieve existing placed orders, add the new one, and save back
+       try {
+            const existingPlacedOrdersRaw = localStorage.getItem('placedOrders');
+            const existingPlacedOrders: PlacedOrder[] = existingPlacedOrdersRaw ? JSON.parse(existingPlacedOrdersRaw) : [];
 
-      // Clear the order after placing it
-      setOrder([]);
-      // localStorage removal is handled by the useEffect hook when order becomes empty
+            if (!Array.isArray(existingPlacedOrders)) {
+                console.error("Invalid 'placedOrders' data in localStorage. Resetting.");
+                localStorage.setItem('placedOrders', JSON.stringify([newPlacedOrder]));
+            } else {
+                existingPlacedOrders.push(newPlacedOrder);
+                localStorage.setItem('placedOrders', JSON.stringify(existingPlacedOrders));
+            }
+
+            console.log("Placing Order (Saved to localStorage):", newPlacedOrder);
+
+            // Simulate order placement success
+            showToast("Pedido Realizado", `Tu pedido para la mesa ${tableNumber} ha sido enviado.`);
+
+            // Clear the temporary order after placing it
+            setOrder([]);
+            // localStorage removal for 'currentOrder' is handled by the useEffect hook when order becomes empty
+
+       } catch (error) {
+            console.error("Failed to save placed order to localStorage", error);
+             showToast("Error al Guardar", "No se pudo guardar el pedido realizado.", "destructive");
+       }
   };
 
 
@@ -155,7 +189,7 @@ export default function MenuDisplay() {
     return order.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2);
   };
 
-  // Group items by category
+  // Group items by category from the current menuItems state
   const groupedMenu = menuItems.reduce((acc, item) => {
     const category = item.category || 'Otros'; // Default category if missing
     if (!acc[category]) {
@@ -193,6 +227,9 @@ export default function MenuDisplay() {
               </div>
             </div>
           ))}
+           {Object.keys(groupedMenu).length === 0 && (
+                <p className="text-muted-foreground text-center py-10">El menú está vacío o no se pudo cargar.</p>
+            )}
         </div>
       </ScrollArea>
 
