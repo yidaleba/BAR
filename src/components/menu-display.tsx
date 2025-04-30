@@ -11,15 +11,14 @@ import { PlusCircle, ShoppingCart, MinusCircle, Trash2 } from 'lucide-react'; //
 import { useToast } from "@/hooks/use-toast";
 import type { MenuItem, OrderItem, PlacedOrder } from '@/types/menu'; // Import shared types
 
-// Define the structure of a placed order for storage - already imported via types/menu
-
-
 export default function MenuDisplay() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [order, setOrder] = useState<OrderItem[]>([]);
   const [userName, setUserName] = useState<string | null>(null);
   const [tableNumber, setTableNumber] = useState<string | null>(null);
   const { toast } = useToast();
+  const [toastInfo, setToastInfo] = useState<{ title: string; description: string; variant?: "default" | "destructive" } | null>(null);
+
 
   useEffect(() => {
     // Load menu data from the imported JSON
@@ -70,10 +69,13 @@ export default function MenuDisplay() {
     }
    }, [order]);
 
-   // Wrap toast calls in useEffect to prevent calling during render
-   const showToast = (title: string, description: string, variant: "default" | "destructive" = "default") => {
-       toast({ title, description, variant });
-   };
+   // Effect to show toast messages after state updates
+    useEffect(() => {
+        if (toastInfo) {
+            toast(toastInfo); // Use the toast function from the hook
+            setToastInfo(null); // Reset after showing
+        }
+    }, [toastInfo, toast]); // Depend on toastInfo and the toast function
 
 
   const addToOrder = (item: MenuItem) => {
@@ -91,8 +93,8 @@ export default function MenuDisplay() {
         // Add new item
         updatedOrder = [...prevOrder, { ...item, quantity: 1 }];
       }
-      // Use useEffect for toast
-       showToast("Añadido al pedido", `${item.name} se ha añadido a tu pedido.`);
+      // Set toast info to be shown by useEffect
+      setToastInfo({ title: "Añadido al pedido", description: `${item.name} se ha añadido a tu pedido.` });
       return updatedOrder;
     });
   };
@@ -117,8 +119,8 @@ export default function MenuDisplay() {
                 toastMessage = `Cantidad de ${currentItem.name} reducida a ${newQuantity}.`;
             }
 
-             // Use useEffect for toast
-             showToast("Pedido actualizado", toastMessage);
+             // Set toast info to be shown by useEffect
+             setToastInfo({ title: "Pedido actualizado", description: toastMessage });
             return updatedOrder;
         });
     };
@@ -127,12 +129,12 @@ export default function MenuDisplay() {
   const placeOrder = () => {
       // Basic validation
       if (order.length === 0) {
-          showToast("Pedido vacío", "Añade algunos artículos antes de realizar el pedido.", "destructive");
+          setToastInfo({ title: "Pedido vacío", description: "Añade algunos artículos antes de realizar el pedido.", variant: "destructive" });
           return;
       }
 
       if (!userName || !tableNumber) {
-           showToast("Falta información", "No se encontró el nombre o número de mesa. Vuelve a la página principal.", "destructive");
+           setToastInfo({ title: "Falta información", description: "No se encontró el nombre o número de mesa. Vuelve a la página principal.", variant: "destructive" });
            return;
       }
 
@@ -163,7 +165,7 @@ export default function MenuDisplay() {
             console.log("Placing Order (Saved to localStorage):", newPlacedOrder);
 
             // Simulate order placement success
-            showToast("Pedido Realizado", `Tu pedido para la mesa ${tableNumber} ha sido enviado.`);
+            setToastInfo({ title: "Pedido Realizado", description: `Tu pedido para la mesa ${tableNumber} ha sido enviado.` });
 
             // Clear the temporary order after placing it
             setOrder([]);
@@ -171,7 +173,7 @@ export default function MenuDisplay() {
 
        } catch (error) {
             console.error("Failed to save placed order to localStorage", error);
-             showToast("Error al Guardar", "No se pudo guardar el pedido realizado.", "destructive");
+             setToastInfo({ title: "Error al Guardar", description: "No se pudo guardar el pedido realizado.", variant: "destructive" });
        }
   };
 
