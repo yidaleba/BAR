@@ -38,11 +38,12 @@ export default function UserInfoForm() {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    // Store user info (e.g., in localStorage or context) and navigate
-    console.log("User Info:", values); // Replace with actual logic later
+    // Store user info (e.g., in localStorage)
+    console.log("User Info:", values);
     localStorage.setItem('userName', values.name);
     localStorage.setItem('tableNumber', values.tableNumber.toString());
-    router.push('/menu'); // Navigate to the menu page after submission
+    // Navigate to the options page after submission
+    router.push('/home-options');
   }
 
   return (
@@ -90,8 +91,9 @@ export default function UserInfoForm() {
                 </FormItem>
               )}
             />
+            {/* Changed button text and action */}
             <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
-              Ver Menú
+              Continuar
             </Button>
           </form>
         </Form>
