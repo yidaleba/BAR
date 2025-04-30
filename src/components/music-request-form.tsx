@@ -45,10 +45,8 @@ const saveStoredRequests = (requests: Record<string, string[]>) => {
 };
 
 
+// Schema now only includes the song request
 const formSchema = z.object({
-  tableNumber: z.coerce.number().int().positive({
-    message: "El número de mesa debe ser positivo.",
-  }),
   songRequest: z.string().min(1, {
     message: "El nombre de la canción o artista es requerido.",
   }),
@@ -58,24 +56,24 @@ export default function MusicRequestForm() {
   const router = useRouter(); // Keep if needed for future redirection
   const { toast } = useToast();
   const [currentTableRequests, setCurrentTableRequests] = useState<string[]>([]);
-  const [initialTableNumber, setInitialTableNumber] = useState<number | ''>('');
+  const [tableNumber, setTableNumber] = useState<string | null>(null); // Store table number as string
 
-  // Load initial table number and requests on mount
+  // Load table number and requests on mount
   useEffect(() => {
     const storedTable = localStorage.getItem('tableNumber');
-    const tableNum = storedTable ? parseInt(storedTable, 10) : '';
-    if (tableNum && !isNaN(tableNum)) {
-        setInitialTableNumber(tableNum);
-        form.setValue('tableNumber', tableNum); // Pre-fill form
+    if (storedTable) {
+        setTableNumber(storedTable);
         const allRequests = getStoredRequests();
-        setCurrentTableRequests(allRequests[tableNum.toString()] || []);
+        setCurrentTableRequests(allRequests[storedTable] || []);
     } else {
          // Optionally prompt user if table number isn't set, or handle differently
          toast({
-             title: "Número de Mesa Requerido",
-             description: "Por favor, ingresa tu número de mesa.",
+             title: "Número de Mesa No Encontrado",
+             description: "No se pudo encontrar tu número de mesa. Por favor, vuelve a la página principal.",
              variant: "destructive"
          })
+         // Consider redirecting or disabling the form
+         // router.push('/');
     }
 
   }, []); // Run only once on mount
@@ -84,26 +82,22 @@ export default function MusicRequestForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      tableNumber: initialTableNumber,
       songRequest: "",
     },
   });
 
-   // Watch table number changes to update request count display
-   const watchedTableNumber = form.watch('tableNumber');
-   useEffect(() => {
-       if (watchedTableNumber) {
-           const allRequests = getStoredRequests();
-           setCurrentTableRequests(allRequests[watchedTableNumber.toString()] || []);
-       } else {
-            setCurrentTableRequests([]); // Clear if table number is cleared
-       }
-   }, [watchedTableNumber]);
-
-
   function onSubmit(values: z.infer<typeof formSchema>) {
-    const { tableNumber, songRequest } = values;
-    const tableKey = tableNumber.toString();
+    if (!tableNumber) {
+        toast({
+             title: "Error",
+             description: "Número de mesa no disponible. Intenta recargar.",
+             variant: "destructive"
+        });
+        return;
+    }
+
+    const { songRequest } = values;
+    const tableKey = tableNumber; // Use the state variable
     const allRequests = getStoredRequests();
     const tableRequests = allRequests[tableKey] || [];
 
@@ -123,8 +117,7 @@ export default function MusicRequestForm() {
 
     // Update state and UI
     setCurrentTableRequests(updatedTableRequests);
-    form.resetField('songRequest'); // Clear only the song input
-     form.setValue('tableNumber', tableNumber); // Keep table number filled
+    form.resetField('songRequest'); // Clear the song input
 
     toast({
       title: "¡Canción Solicitada!",
@@ -135,8 +128,8 @@ export default function MusicRequestForm() {
     // Optionally: Send request to backend here if needed
   }
 
-  const remainingRequests = MAX_REQUESTS_PER_TABLE - currentTableRequests.length;
-  const canRequest = remainingRequests > 0;
+  const remainingRequests = tableNumber ? MAX_REQUESTS_PER_TABLE - currentTableRequests.length : 0;
+  const canRequest = tableNumber && remainingRequests > 0;
 
   return (
     <Card className="w-full max-w-lg shadow-lg">
@@ -145,33 +138,21 @@ export default function MusicRequestForm() {
           <ListMusic className="h-10 w-10 text-primary" />
         </div>
         <CardTitle className="text-2xl font-semibold">Pedir Música</CardTitle>
-        <CardDescription>
-            Solicita tu canción o artista favorito. Te quedan {remainingRequests} solicitudes.
-        </CardDescription>
+        {tableNumber ? (
+             <CardDescription>
+                 Mesa {tableNumber}. Solicita tu canción o artista favorito. Te quedan {remainingRequests} solicitudes.
+             </CardDescription>
+        ) : (
+             <CardDescription className="text-destructive">
+                 Número de mesa no encontrado. Vuelve a inicio.
+             </CardDescription>
+        )}
       </CardHeader>
       <Separator />
       <CardContent className="pt-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="tableNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Número de Mesa</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Ej: 5"
-                      {...field}
-                      value={field.value ?? ''}
-                      onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+             {/* Removed Table Number Field */}
             <FormField
               control={form.control}
               name="songRequest"
@@ -179,23 +160,23 @@ export default function MusicRequestForm() {
                 <FormItem>
                   <FormLabel>Canción o Artista</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ej: Bohemian Rhapsody - Queen" {...field} />
+                    <Input placeholder="Ej: Bohemian Rhapsody - Queen" {...field} disabled={!tableNumber}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" disabled={!canRequest || !watchedTableNumber}>
-                {canRequest ? 'Enviar Solicitud' : 'Límite Alcanzado'}
+            <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" disabled={!canRequest}>
+                {canRequest ? 'Enviar Solicitud' : (tableNumber ? 'Límite Alcanzado' : 'Mesa no definida')}
                 {canRequest && <Music className="ml-2 h-4 w-4" />}
             </Button>
           </form>
         </Form>
 
         {/* Display current requests for the table */}
-        {currentTableRequests.length > 0 && (
+        {tableNumber && currentTableRequests.length > 0 && (
             <div className="mt-6 pt-4 border-t border-border">
-                <h3 className="text-md font-medium mb-2 text-center text-muted-foreground">Solicitudes para Mesa {watchedTableNumber}:</h3>
+                <h3 className="text-md font-medium mb-2 text-center text-muted-foreground">Tus Solicitudes (Mesa {tableNumber}):</h3>
                 <ul className="list-disc list-inside text-sm text-center space-y-1">
                     {currentTableRequests.map((req, index) => (
                         <li key={index}>{req}</li>
