@@ -9,18 +9,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { PlusCircle, ShoppingCart, MinusCircle, Trash2 } from 'lucide-react'; // Added MinusCircle, Trash2
 import { useToast } from "@/hooks/use-toast";
+import type { MenuItem, OrderItem } from '@/types/menu'; // Import shared types
 
-interface MenuItem {
-  id: number;
-  name: string;
-  price: number;
-  category: string;
-  description?: string; // Optional description
-}
-
-interface OrderItem extends MenuItem {
-  quantity: number;
-}
+// Interfaces removed, using shared types from '@/types/menu'
 
 export default function MenuDisplay() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -31,7 +22,7 @@ export default function MenuDisplay() {
 
   useEffect(() => {
     // Load menu data from the imported JSON
-    setMenuItems(menuData.items);
+    setMenuItems(menuData.items as MenuItem[]); // Assert type
 
     // Retrieve user info from localStorage
     const storedName = localStorage.getItem('userName');
@@ -43,9 +34,21 @@ export default function MenuDisplay() {
     const savedOrder = localStorage.getItem('currentOrder');
     if (savedOrder) {
         try {
-            const parsedOrder = JSON.parse(savedOrder);
+            const parsedOrder: OrderItem[] = JSON.parse(savedOrder); // Assert type
              if (Array.isArray(parsedOrder)) {
-                setOrder(parsedOrder);
+                // Basic validation: Check if items have necessary properties
+                const isValidOrder = parsedOrder.every(item =>
+                    typeof item.id === 'number' &&
+                    typeof item.name === 'string' &&
+                    typeof item.price === 'number' &&
+                    typeof item.quantity === 'number' && item.quantity > 0
+                );
+                if (isValidOrder) {
+                    setOrder(parsedOrder);
+                } else {
+                     console.error("Invalid order structure in localStorage");
+                     localStorage.removeItem('currentOrder');
+                }
             }
         } catch (error) {
             console.error("Failed to parse order from localStorage", error);
@@ -65,6 +68,12 @@ export default function MenuDisplay() {
     }
    }, [order]);
 
+   // Wrap toast calls in useEffect to prevent calling during render
+   const showToast = (title: string, description: string, variant: "default" | "destructive" = "default") => {
+       toast({ title, description, variant });
+   };
+
+
   const addToOrder = (item: MenuItem) => {
     setOrder(prevOrder => {
       const existingItemIndex = prevOrder.findIndex(orderItem => orderItem.id === item.id);
@@ -80,80 +89,48 @@ export default function MenuDisplay() {
         // Add new item
         updatedOrder = [...prevOrder, { ...item, quantity: 1 }];
       }
-      // Return updated order first
+      // Use useEffect for toast
+       showToast("Añadido al pedido", `${item.name} se ha añadido a tu pedido.`);
       return updatedOrder;
-    });
-    // Call toast *after* state update is triggered
-     toast({
-      title: "Añadido al pedido",
-      description: `${item.name} se ha añadido a tu pedido.`,
     });
   };
 
    const removeFromOrder = (itemId: number, removeAll: boolean = false) => {
-        let toastMessage = ""; // Variable to hold the message
-        let itemUpdated = false; // Flag to check if an update occurred
-
         setOrder(prevOrder => {
             const itemIndex = prevOrder.findIndex(orderItem => orderItem.id === itemId);
             if (itemIndex === -1) {
-                itemUpdated = false;
                 return prevOrder; // Item not found
             }
 
             const currentItem = prevOrder[itemIndex];
             let updatedOrder = [...prevOrder];
+            let toastMessage = "";
 
             if (removeAll || currentItem.quantity <= 1) {
-                // Remove item completely
                 updatedOrder.splice(itemIndex, 1);
-                // Set message for later use
                 toastMessage = `${currentItem.name} eliminado del pedido.`;
-                itemUpdated = true;
             } else {
-                // Decrease quantity by 1
                 const newQuantity = currentItem.quantity - 1;
-                updatedOrder[itemIndex] = {
-                    ...currentItem,
-                    quantity: newQuantity,
-                };
-                // Set message for later use
+                updatedOrder[itemIndex] = { ...currentItem, quantity: newQuantity };
                 toastMessage = `Cantidad de ${currentItem.name} reducida a ${newQuantity}.`;
-                itemUpdated = true;
             }
 
-            // Don't call toast here, just return the new state
+             // Use useEffect for toast
+             showToast("Pedido actualizado", toastMessage);
             return updatedOrder;
         });
-
-        // Call toast *after* setOrder has been called and only if an update happened
-        if (itemUpdated && toastMessage) {
-            toast({
-                title: "Pedido actualizado",
-                description: toastMessage,
-                variant: "default",
-            });
-        }
     };
 
 
   const placeOrder = () => {
       // Basic validation
       if (order.length === 0) {
-          toast({
-              title: "Pedido vacío",
-              description: "Añade algunos artículos antes de realizar el pedido.",
-              variant: "destructive",
-          });
+          showToast("Pedido vacío", "Añade algunos artículos antes de realizar el pedido.", "destructive");
           return;
       }
 
       if (!userName || !tableNumber) {
-           toast({
-              title: "Falta información",
-              description: "No se encontró el nombre o número de mesa. Vuelve a la página principal.",
-              variant: "destructive",
-           });
+           showToast("Falta información", "No se encontró el nombre o número de mesa. Vuelve a la página principal.", "destructive");
            return;
       }
 
@@ -166,10 +143,7 @@ export default function MenuDisplay() {
       });
 
       // Simulate order placement
-      toast({
-          title: "Pedido Realizado",
-          description: `Tu pedido para la mesa ${tableNumber} ha sido enviado.`,
-      });
+       showToast("Pedido Realizado", `Tu pedido para la mesa ${tableNumber} ha sido enviado.`);
 
       // Clear the order after placing it
       setOrder([]);
@@ -241,11 +215,12 @@ export default function MenuDisplay() {
                 <ul className="space-y-3">
                 {order.map(item => (
                     <li key={item.id} className="flex justify-between items-center text-sm group">
-                       <div className="flex-grow">
+                       <div className="flex-grow mr-2"> {/* Added margin-right */}
                            <span>{item.quantity}x {item.name}</span>
-                           <span className="ml-4">${(item.price * item.quantity).toFixed(2)}</span>
+                           <span className="block text-xs text-muted-foreground">${item.price.toFixed(2)} c/u</span> {/* Show unit price */}
                        </div>
-                       <div className="flex items-center ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="font-medium mr-2">${(item.price * item.quantity).toFixed(2)}</div> {/* Item total price */}
+                       <div className="flex items-center ml-auto opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"> {/* Prevent shrinking */}
                            <Button
                                 variant="ghost"
                                 size="icon"

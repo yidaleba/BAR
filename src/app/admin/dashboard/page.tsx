@@ -3,9 +3,10 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link'; // Import Link
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, LogOut } from 'lucide-react';
+import { LayoutDashboard, LogOut, Package } from 'lucide-react'; // Import Package icon
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -52,16 +53,20 @@ export default function AdminDashboardPage() {
             </Button>
        </div>
 
-      {/* Placeholder Content */}
+      {/* Updated Content */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Gestión de Inventario</CardTitle>
+            <CardTitle className="flex items-center"> <Package className="mr-2 h-5 w-5"/> Gestión de Inventario</CardTitle> {/* Added icon */}
           </CardHeader>
           <CardContent>
-            <p>Aquí podrás añadir, editar o eliminar productos del menú.</p>
+            <p>Añade, edita o elimina productos del menú.</p> {/* Updated description */}
             {/* Add links/buttons for inventory actions */}
-             <Button className="mt-4" disabled>Próximamente</Button>
+             <Link href="/admin/inventory" passHref legacyBehavior>
+                <Button className="mt-4 w-full"> {/* Enabled button and linked */}
+                    Gestionar Inventario
+                 </Button>
+             </Link>
           </CardContent>
         </Card>
         <Card>
@@ -70,7 +75,7 @@ export default function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             <p>Visualiza los pedidos activos realizados por los usuarios.</p>
-             <Button className="mt-4" disabled>Próximamente</Button>
+             <Button className="mt-4 w-full" disabled>Próximamente</Button>
           </CardContent>
         </Card>
          <Card>
@@ -79,7 +84,7 @@ export default function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             <p>Ajustes generales del sistema.</p>
-             <Button className="mt-4" disabled>Próximamente</Button>
+             <Button className="mt-4 w-full" disabled>Próximamente</Button>
           </CardContent>
         </Card>
       </div>
