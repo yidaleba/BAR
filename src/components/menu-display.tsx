@@ -1,3 +1,4 @@
+// src/components/menu-display.tsx
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -55,25 +56,34 @@ export default function MenuDisplay() {
 
    // Save order to localStorage whenever it changes
    useEffect(() => {
-    localStorage.setItem('currentOrder', JSON.stringify(order));
+    // Only save if order is not empty to avoid saving empty array initially
+    if (order.length > 0) {
+        localStorage.setItem('currentOrder', JSON.stringify(order));
+    } else {
+        // If order becomes empty, remove it from storage
+        localStorage.removeItem('currentOrder');
+    }
    }, [order]);
 
   const addToOrder = (item: MenuItem) => {
     setOrder(prevOrder => {
       const existingItemIndex = prevOrder.findIndex(orderItem => orderItem.id === item.id);
+      let updatedOrder;
       if (existingItemIndex > -1) {
         // Increase quantity
-        const updatedOrder = [...prevOrder];
+        updatedOrder = [...prevOrder];
         updatedOrder[existingItemIndex] = {
           ...updatedOrder[existingItemIndex],
           quantity: updatedOrder[existingItemIndex].quantity + 1,
         };
-        return updatedOrder;
       } else {
         // Add new item
-        return [...prevOrder, { ...item, quantity: 1 }];
+        updatedOrder = [...prevOrder, { ...item, quantity: 1 }];
       }
+      // Return updated order first
+      return updatedOrder;
     });
+    // Call toast *after* state update is triggered
      toast({
       title: "Añadido al pedido",
       description: `${item.name} se ha añadido a tu pedido.`,
@@ -81,35 +91,49 @@ export default function MenuDisplay() {
   };
 
    const removeFromOrder = (itemId: number, removeAll: boolean = false) => {
+        let toastMessage = ""; // Variable to hold the message
+        let itemUpdated = false; // Flag to check if an update occurred
+
         setOrder(prevOrder => {
             const itemIndex = prevOrder.findIndex(orderItem => orderItem.id === itemId);
-            if (itemIndex === -1) return prevOrder; // Item not found
+            if (itemIndex === -1) {
+                itemUpdated = false;
+                return prevOrder; // Item not found
+            }
 
             const currentItem = prevOrder[itemIndex];
             let updatedOrder = [...prevOrder];
-            let toastMessage = "";
 
             if (removeAll || currentItem.quantity <= 1) {
                 // Remove item completely
                 updatedOrder.splice(itemIndex, 1);
+                // Set message for later use
                 toastMessage = `${currentItem.name} eliminado del pedido.`;
+                itemUpdated = true;
             } else {
                 // Decrease quantity by 1
+                const newQuantity = currentItem.quantity - 1;
                 updatedOrder[itemIndex] = {
                     ...currentItem,
-                    quantity: currentItem.quantity - 1,
+                    quantity: newQuantity,
                 };
-                 toastMessage = `Cantidad de ${currentItem.name} reducida a ${currentItem.quantity - 1}.`;
+                // Set message for later use
+                toastMessage = `Cantidad de ${currentItem.name} reducida a ${newQuantity}.`;
+                itemUpdated = true;
             }
 
+            // Don't call toast here, just return the new state
+            return updatedOrder;
+        });
+
+        // Call toast *after* setOrder has been called and only if an update happened
+        if (itemUpdated && toastMessage) {
             toast({
                 title: "Pedido actualizado",
                 description: toastMessage,
-                variant: "default", // Use default or destructive as needed
+                variant: "default",
             });
-
-            return updatedOrder;
-        });
+        }
     };
 
 
@@ -149,7 +173,7 @@ export default function MenuDisplay() {
 
       // Clear the order after placing it
       setOrder([]);
-      localStorage.removeItem('currentOrder');
+      // localStorage removal is handled by the useEffect hook when order becomes empty
   };
 
 
