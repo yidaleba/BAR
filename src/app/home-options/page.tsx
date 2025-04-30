@@ -34,7 +34,7 @@ export default function HomeOptionsPage() {
                 <ClipboardList className="h-10 w-10 text-primary" />
               </div>
               <CardTitle className="text-2xl font-semibold">Realizar Pedido</CardTitle>
-              <CardDescription>Explora nuestro menú y pide algo delicioso.</CardDescription>
+              <CardDescription>Explora nuestro menú y pide lo que quieras.</CardDescription> {/* Updated text */}
             </CardHeader>
             <CardContent className="flex justify-center">
               <Link href="/menu" passHref legacyBehavior>
@@ -51,7 +51,7 @@ export default function HomeOptionsPage() {
                 <Music className="h-10 w-10 text-primary" />
               </div>
               <CardTitle className="text-2xl font-semibold">Pedir Música</CardTitle>
-              <CardDescription>Sugiere canciones para ambientar (máx. 3 por mesa).</CardDescription>
+              <CardDescription>Sugiere canciones para ambientar.</CardDescription> {/* Updated text */}
             </CardHeader>
             <CardContent className="flex justify-center">
                <Link href="/pedir-musica" passHref legacyBehavior>
