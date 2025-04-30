@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Utensils } from 'lucide-react'; // Icon for the card header
+import { HandMetal } from 'lucide-react'; // Changed icon to HandMetal (rock hand)
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -49,9 +49,9 @@ export default function UserInfoForm() {
     <Card className="w-full max-w-md shadow-lg">
       <CardHeader className="text-center">
         <div className="flex justify-center items-center mb-4">
-           <Utensils className="h-8 w-8 text-primary" />
+           <HandMetal className="h-8 w-8 text-primary" /> {/* Use HandMetal icon */}
         </div>
-        <CardTitle className="text-2xl font-semibold">Bienvenido a Bar Buddy</CardTitle>
+        <CardTitle className="text-2xl font-semibold">Bienvenido a Cafe Bar</CardTitle> {/* Updated Title */}
         <CardDescription>Ingresa tu nombre y número de mesa para comenzar.</CardDescription>
       </CardHeader>
       <CardContent>

@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Bar Buddy',
+  title: 'Cafe Bar', // Updated title
   description: 'Gestion de Bar',
 };
 
@@ -34,9 +34,9 @@ export default function RootLayout({
         </main>
         <Link href="/admin/login" passHref legacyBehavior>
            <Button
-            variant="secondary" // Use secondary which is light grey
+            variant="secondary" // Use secondary which is light grey based on original theme, now dark grey
             size="icon"
-            className="fixed bottom-4 right-4 rounded-full shadow-lg w-14 h-14 bg-primary text-primary-foreground hover:bg-primary/90"
+            className="fixed bottom-4 right-4 rounded-full shadow-lg w-14 h-14 bg-primary text-primary-foreground hover:bg-primary/90" // Adjusted classes for new theme
             aria-label="Admin Access"
           >
             <UserCog className="h-6 w-6" />

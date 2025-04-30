@@ -8,80 +8,80 @@ body {
 
 @layer base {
   :root {
-    /* Light Theme (Default) */
-    --background: 0 0% 94.1%; /* Light grey #f0f0f0 */
-    --foreground: 0 0% 20%; /* Dark grey #333333 */
-    --card: 0 0% 100%; /* White for cards to stand out slightly */
-    --card-foreground: 0 0% 20%; /* Dark grey #333333 */
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 20%;
-    --primary: 0 0% 20%; /* Dark grey #333333 */
-    --primary-foreground: 0 0% 98%; /* Almost white for contrast on primary */
-    --secondary: 0 0% 96.1%; /* Slightly off-white */
-    --secondary-foreground: 0 0% 9%; /* Default dark */
-    --muted: 0 0% 90%; /* Slightly darker grey for muted elements */
-    --muted-foreground: 0 0% 45.1%; /* Default muted foreground */
-    --accent: 180 100% 25.1%; /* Teal #008080 */
+    /* Light Theme (Default) - Adjusted to Black Background, Red Accent */
+    --background: 0 0% 0%; /* Black */
+    --foreground: 0 0% 98%; /* Almost white for text on black */
+    --card: 0 0% 10%; /* Dark grey for cards */
+    --card-foreground: 0 0% 98%; /* Almost white text on cards */
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%; /* Use light text as primary on dark bg */
+    --primary-foreground: 0 0% 9%; /* Dark text for contrast on primary (which is light) */
+    --secondary: 0 0% 15%; /* Slightly lighter dark grey */
+    --secondary-foreground: 0 0% 98%; /* Light text on secondary */
+    --muted: 0 0% 20%; /* Darker grey for muted elements */
+    --muted-foreground: 0 0% 60%; /* Lighter muted foreground */
+    --accent: 0 72% 51%; /* Red (approx #e53e3e) */
     --accent-foreground: 0 0% 98%; /* Almost white for contrast on accent */
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 63% 31%; /* Darker red for destructive */
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 85%; /* Lighter border */
-    --input: 0 0% 89.8%; /* Slightly lighter input background */
-    --ring: 180 100% 25.1%; /* Teal for focus rings */
-    --chart-1: 180 76% 31%;
-    --chart-2: 180 58% 39%;
-    --chart-3: 180 37% 44%;
-    --chart-4: 180 74% 56%;
-    --chart-5: 180 87% 47%;
+    --border: 0 0% 20%; /* Dark border */
+    --input: 0 0% 15%; /* Dark input background */
+    --ring: 0 72% 51%; /* Red for focus rings */
+    --chart-1: 0 70% 50%;
+    --chart-2: 0 60% 45%;
+    --chart-3: 0 80% 55%;
+    --chart-4: 0 65% 60%;
+    --chart-5: 0 75% 55%;
     --radius: 0.5rem;
 
     /* Sidebar variables (adjust if sidebar is used later) */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 0 0% 20%;
-    --sidebar-primary: 180 100% 25.1%;
+    --sidebar-background: 0 0% 5%; /* Very dark sidebar */
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 0 72% 51%; /* Red */
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 0 0% 94.1%;
-    --sidebar-accent-foreground: 0 0% 9%;
-    --sidebar-border: 0 0% 85%;
-    --sidebar-ring: 180 100% 25.1%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 0 72% 51%;
   }
 
   .dark {
-    /* Dark Theme (Define if needed later) */
-    --background: 0 0% 10%; /* Darker background */
-    --foreground: 0 0% 94.1%; /* Light grey for text */
-    --card: 0 0% 15%; /* Dark card background */
-    --card-foreground: 0 0% 94.1%;
-    --popover: 0 0% 15%;
-    --popover-foreground: 0 0% 94.1%;
-    --primary: 0 0% 94.1%; /* Light grey for primary elements */
-    --primary-foreground: 0 0% 10%; /* Dark text on primary */
-    --secondary: 0 0% 25%; /* Dark secondary */
-    --secondary-foreground: 0 0% 94.1%;
-    --muted: 0 0% 30%; /* Dark muted */
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 180 100% 35.1%; /* Slightly lighter Teal for dark mode */
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 50.6%; /* Adjusted destructive */
+    /* Dark Theme - Kept same as light theme as requested base is dark */
+    --background: 0 0% 0%; /* Black */
+    --foreground: 0 0% 98%; /* Almost white for text on black */
+    --card: 0 0% 10%; /* Dark grey for cards */
+    --card-foreground: 0 0% 98%; /* Almost white text on cards */
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%; /* Use light text as primary on dark bg */
+    --primary-foreground: 0 0% 9%; /* Dark text for contrast on primary (which is light) */
+    --secondary: 0 0% 15%; /* Slightly lighter dark grey */
+    --secondary-foreground: 0 0% 98%; /* Light text on secondary */
+    --muted: 0 0% 20%; /* Darker grey for muted elements */
+    --muted-foreground: 0 0% 60%; /* Lighter muted foreground */
+    --accent: 0 72% 51%; /* Red (approx #e53e3e) */
+    --accent-foreground: 0 0% 98%; /* Almost white for contrast on accent */
+    --destructive: 0 63% 31%; /* Darker red for destructive */
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 30%; /* Darker border */
-    --input: 0 0% 25%; /* Darker input */
-    --ring: 180 100% 35.1%; /* Teal ring */
-    --chart-1: 180 70% 50%;
-    --chart-2: 180 60% 45%;
-    --chart-3: 180 80% 55%;
-    --chart-4: 180 65% 60%;
-    --chart-5: 180 75% 55%;
+    --border: 0 0% 20%; /* Dark border */
+    --input: 0 0% 15%; /* Dark input background */
+    --ring: 0 72% 51%; /* Red for focus rings */
+    --chart-1: 0 70% 50%;
+    --chart-2: 0 60% 45%;
+    --chart-3: 0 80% 55%;
+    --chart-4: 0 65% 60%;
+    --chart-5: 0 75% 55%;
 
     /* Sidebar variables */
-    --sidebar-background: 0 0% 15%;
-    --sidebar-foreground: 0 0% 94.1%;
-    --sidebar-primary: 180 100% 35.1%;
-    --sidebar-primary-foreground: 0 0% 10%;
-    --sidebar-accent: 0 0% 25%;
-    --sidebar-accent-foreground: 0 0% 94.1%;
-    --sidebar-border: 0 0% 30%;
-    --sidebar-ring: 180 100% 35.1%;
+    --sidebar-background: 0 0% 5%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 0 72% 51%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 0 72% 51%;
   }
 }
 
