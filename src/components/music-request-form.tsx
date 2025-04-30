@@ -1,7 +1,7 @@
 // src/components/music-request-form.tsx
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react'; // Import useCallback
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -27,10 +27,19 @@ const LOCAL_STORAGE_KEY = 'musicRequests';
 
 // Helper function to get requests from localStorage
 const getStoredRequests = (): Record<string, string[]> => {
+    // Check if window is defined (runs only on client-side)
     if (typeof window === 'undefined') return {};
     const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
     try {
-        return stored ? JSON.parse(stored) : {};
+        const parsed = stored ? JSON.parse(stored) : {};
+        // Basic validation to ensure it's an object
+        if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+            return parsed;
+        }
+        // If data is invalid (e.g., null, array, or parsing failed), return empty object and clean up
+        console.error("Invalid music requests format in localStorage, resetting.");
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+        return {};
     } catch (e) {
         console.error("Failed to parse music requests from localStorage", e);
         localStorage.removeItem(LOCAL_STORAGE_KEY); // Clear invalid data
@@ -38,10 +47,16 @@ const getStoredRequests = (): Record<string, string[]> => {
     }
 };
 
+
 // Helper function to save requests to localStorage
 const saveStoredRequests = (requests: Record<string, string[]>) => {
     if (typeof window === 'undefined') return;
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(requests));
+    try {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(requests));
+    } catch (error) {
+         console.error("Failed to save music requests to localStorage", error);
+         // Optionally show a toast error to the user if saving fails
+    }
 };
 
 
@@ -58,25 +73,46 @@ export default function MusicRequestForm() {
   const [currentTableRequests, setCurrentTableRequests] = useState<string[]>([]);
   const [tableNumber, setTableNumber] = useState<string | null>(null); // Store table number as string
 
-  // Load table number and requests on mount
-  useEffect(() => {
-    const storedTable = localStorage.getItem('tableNumber');
-    if (storedTable) {
+  // Function to load requests for the current table
+  const loadCurrentTableRequests = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      const storedTable = localStorage.getItem('tableNumber');
+      if (storedTable) {
         setTableNumber(storedTable);
         const allRequests = getStoredRequests();
         setCurrentTableRequests(allRequests[storedTable] || []);
-    } else {
-         // Optionally prompt user if table number isn't set, or handle differently
-         toast({
-             title: "Número de Mesa No Encontrado",
-             description: "No se pudo encontrar tu número de mesa. Por favor, vuelve a la página principal.",
-             variant: "destructive"
-         })
-         // Consider redirecting or disabling the form
-         // router.push('/');
+      } else {
+        toast({
+          title: "Número de Mesa No Encontrado",
+          description: "No se pudo encontrar tu número de mesa. Por favor, vuelve a la página principal.",
+          variant: "destructive"
+        });
+        // Optionally disable form or redirect
+      }
     }
+  }, [toast]); // Add toast as dependency
 
-  }, []); // Run only once on mount
+  // Load table number and requests on mount, and listen for storage changes
+  useEffect(() => {
+    loadCurrentTableRequests(); // Initial load
+
+    // Define the event handler
+    const handleStorageChange = (event: StorageEvent) => {
+      // Check if the change happened to our specific key and originated from another tab/window
+      if (event.key === LOCAL_STORAGE_KEY && event.storageArea === localStorage) {
+         console.log('Music requests updated in another tab. Reloading...');
+        loadCurrentTableRequests(); // Reload requests when localStorage changes
+      }
+    };
+
+    // Add event listener
+    window.addEventListener('storage', handleStorageChange);
+
+    // Cleanup: Remove event listener when component unmounts
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [loadCurrentTableRequests]); // Depend on the memoized loader function
 
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -96,12 +132,12 @@ export default function MusicRequestForm() {
         return;
     }
 
-    const { songRequest } = values;
-    const tableKey = tableNumber; // Use the state variable
+    // Re-check the current number of requests *right before* adding a new one
+    // This ensures the limit check uses the most up-to-date data from localStorage
     const allRequests = getStoredRequests();
-    const tableRequests = allRequests[tableKey] || [];
+    const currentRequestsForTable = allRequests[tableNumber] || [];
 
-    if (tableRequests.length >= MAX_REQUESTS_PER_TABLE) {
+    if (currentRequestsForTable.length >= MAX_REQUESTS_PER_TABLE) {
       toast({
         title: "Límite Alcanzado",
         description: `Ya has solicitado el máximo de ${MAX_REQUESTS_PER_TABLE} canciones para la mesa ${tableNumber}.`,
@@ -110,8 +146,12 @@ export default function MusicRequestForm() {
       return;
     }
 
+
+    const { songRequest } = values;
+    const tableKey = tableNumber; // Use the state variable
+
     // Add the new request
-    const updatedTableRequests = [...tableRequests, songRequest];
+    const updatedTableRequests = [...currentRequestsForTable, songRequest]; // Use the freshly fetched requests
     allRequests[tableKey] = updatedTableRequests;
     saveStoredRequests(allRequests);
 
