@@ -3,8 +3,7 @@ import Link from 'next/link';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
-import { Button } from "@/components/ui/button";
-import { UserCog } from 'lucide-react'; // Changed from ShieldAlert to UserCog for admin access
+// Removed Button and UserCog imports as they are no longer used here
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -32,16 +31,7 @@ export default function RootLayout({
         <main className="flex-grow">
           {children}
         </main>
-        <Link href="/admin/login" passHref legacyBehavior>
-           <Button
-            variant="secondary" // Use secondary which is light grey based on original theme, now dark grey
-            size="icon"
-            className="fixed bottom-4 right-4 rounded-full shadow-lg w-14 h-14 bg-primary text-primary-foreground hover:bg-primary/90" // Adjusted classes for new theme
-            aria-label="Admin Access"
-          >
-            <UserCog className="h-6 w-6" />
-          </Button>
-        </Link>
+        {/* Admin button removed from here */}
         <Toaster />
       </body>
     </html>

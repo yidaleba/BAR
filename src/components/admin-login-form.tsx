@@ -39,8 +39,8 @@ export default function AdminLoginForm() {
     // --- Placeholder for actual admin authentication ---
     console.log("Admin Login Attempt:", values);
 
-    // Simulate login success/failure
-    if (values.username === "admin" && values.password === "password") { // VERY INSECURE - REPLACE WITH ACTUAL AUTH
+    // Simulate login success/failure with updated credentials
+    if (values.username === "admin" && values.password === "123456") { // Updated credentials
       toast({
         title: "Inicio de sesión exitoso",
         description: "Redirigiendo al panel de administración...",
