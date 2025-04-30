@@ -19,7 +19,7 @@ export default function InventoryCategoriesPage() {
         // Extract unique categories from menu data and add the default "Cerveza"
         const existingCategories = Array.from(new Set(menuData.items.map(item => item.category)));
         const initialCategories = Array.from(new Set(["Cerveza", ...existingCategories])); // Ensure "Cerveza" is present
-        setCategories(initialCategories);
+        setCategories(initialCategories.sort()); // Sort categories alphabetically
     }, []);
 
     const handleAddCategory = () => {
@@ -98,12 +98,13 @@ export default function InventoryCategoriesPage() {
                         ) : (
                             <ul className="space-y-2">
                                 {categories.map((category) => (
-                                    <li key={category}>
+                                    <li key={category} className="group relative"> {/* Add group relative for positioning delete */}
                                         <Link href={`/admin/inventory/${encodeURIComponent(category)}`} passHref legacyBehavior>
-                                            <Button variant="outline" className="w-full justify-start text-left h-auto py-3">
+                                             <Button variant="outline" className="w-full justify-start text-left h-auto py-3 pr-10"> {/* Add padding-right */}
                                                 {category}
                                             </Button>
                                         </Link>
+                                         {/* Delete button removed */}
                                     </li>
                                 ))}
                             </ul>
@@ -111,6 +112,7 @@ export default function InventoryCategoriesPage() {
                     </CardContent>
                 </Card>
             </div>
+             {/* Delete Confirmation Dialog removed */}
         </div>
     );
 }
