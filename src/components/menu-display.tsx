@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { PlusCircle, ShoppingCart } from 'lucide-react';
+import { PlusCircle, ShoppingCart, MinusCircle, Trash2 } from 'lucide-react'; // Added MinusCircle, Trash2
 import { useToast } from "@/hooks/use-toast";
 
 interface MenuItem {
@@ -79,6 +79,39 @@ export default function MenuDisplay() {
       description: `${item.name} se ha añadido a tu pedido.`,
     });
   };
+
+   const removeFromOrder = (itemId: number, removeAll: boolean = false) => {
+        setOrder(prevOrder => {
+            const itemIndex = prevOrder.findIndex(orderItem => orderItem.id === itemId);
+            if (itemIndex === -1) return prevOrder; // Item not found
+
+            const currentItem = prevOrder[itemIndex];
+            let updatedOrder = [...prevOrder];
+            let toastMessage = "";
+
+            if (removeAll || currentItem.quantity <= 1) {
+                // Remove item completely
+                updatedOrder.splice(itemIndex, 1);
+                toastMessage = `${currentItem.name} eliminado del pedido.`;
+            } else {
+                // Decrease quantity by 1
+                updatedOrder[itemIndex] = {
+                    ...currentItem,
+                    quantity: currentItem.quantity - 1,
+                };
+                 toastMessage = `Cantidad de ${currentItem.name} reducida a ${currentItem.quantity - 1}.`;
+            }
+
+            toast({
+                title: "Pedido actualizado",
+                description: toastMessage,
+                variant: "default", // Use default or destructive as needed
+            });
+
+            return updatedOrder;
+        });
+    };
+
 
   const placeOrder = () => {
       // Basic validation
@@ -183,9 +216,31 @@ export default function MenuDisplay() {
              <ScrollArea className="h-[30vh] pr-2">
                 <ul className="space-y-3">
                 {order.map(item => (
-                    <li key={item.id} className="flex justify-between items-center text-sm">
-                    <span>{item.quantity}x {item.name}</span>
-                    <span>${(item.price * item.quantity).toFixed(2)}</span>
+                    <li key={item.id} className="flex justify-between items-center text-sm group">
+                       <div className="flex-grow">
+                           <span>{item.quantity}x {item.name}</span>
+                           <span className="ml-4">${(item.price * item.quantity).toFixed(2)}</span>
+                       </div>
+                       <div className="flex items-center ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                           <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-muted-foreground hover:text-accent"
+                                onClick={() => removeFromOrder(item.id)}
+                                aria-label={`Reducir cantidad de ${item.name}`}
+                           >
+                               <MinusCircle className="h-4 w-4"/>
+                           </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-destructive hover:text-destructive/80"
+                                onClick={() => removeFromOrder(item.id, true)} // Pass true to remove all
+                                aria-label={`Eliminar ${item.name} del pedido`}
+                           >
+                               <Trash2 className="h-4 w-4"/>
+                           </Button>
+                       </div>
                     </li>
                 ))}
                 </ul>

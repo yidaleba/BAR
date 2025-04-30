@@ -9,7 +9,7 @@ import type {
 } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_REMOVE_DELAY = 5000 // Changed from 1000000 to 5000ms
 
 type ToasterToast = ToastProps & {
   id: string
@@ -77,12 +77,28 @@ const addToRemoveQueue = (toastId: string) => {
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case "ADD_TOAST":
+      // Clear existing timeouts when a new toast comes in
+       toastTimeouts.forEach(timeout => clearTimeout(timeout));
+       toastTimeouts.clear();
+       // Add the new toast and start its timer
+       const newToast = action.toast;
+       addToRemoveQueue(newToast.id);
       return {
         ...state,
-        toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
+        // Slice ensures only TOAST_LIMIT toasts are kept
+        toasts: [newToast, ...state.toasts].slice(0, TOAST_LIMIT),
       }
 
     case "UPDATE_TOAST":
+      // If a toast is updated, potentially reset its timer if needed
+      // For now, just update content
+       if (action.toast.id) {
+          const existingTimeout = toastTimeouts.get(action.toast.id);
+          if(existingTimeout) {
+              clearTimeout(existingTimeout);
+              addToRemoveQueue(action.toast.id); // Restart timer on update
+          }
+       }
       return {
         ...state,
         toasts: state.toasts.map((t) =>
@@ -116,6 +132,14 @@ export const reducer = (state: State, action: Action): State => {
       }
     }
     case "REMOVE_TOAST":
+      // Clear timeout if it exists when removing manually
+      if (action.toastId) {
+          const existingTimeout = toastTimeouts.get(action.toastId);
+          if(existingTimeout) {
+              clearTimeout(existingTimeout);
+              toastTimeouts.delete(action.toastId);
+          }
+      }
       if (action.toastId === undefined) {
         return {
           ...state,
@@ -163,6 +187,9 @@ function toast({ ...props }: Toast) {
       },
     },
   })
+
+  // Start the timer automatically when a toast is added
+  // addToRemoveQueue(id); // This is now handled within ADD_TOAST reducer case
 
   return {
     id: id,
