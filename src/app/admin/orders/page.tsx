@@ -8,19 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, ClipboardList, Trash2, CheckCircle } from 'lucide-react';
-import type { OrderItem } from '@/types/menu'; // Import OrderItem type
+import type { OrderItem, PlacedOrder } from '@/types/menu'; // Import OrderItem type and PlacedOrder
 import { useToast } from "@/hooks/use-toast";
 
 // Define the structure of a placed order (including user info and timestamp)
-interface PlacedOrder {
-  id: string; // Unique ID for the order
-  userName: string;
-  tableNumber: string;
-  items: OrderItem[];
-  total: string;
-  timestamp: number; // Use timestamp for sorting/display
-  status: 'active' | 'completed'; // Add status field
-}
+// Moved to types/menu.ts
+
 
 export default function AdminOrdersPage() {
     const [orders, setOrders] = useState<PlacedOrder[]>([]);
@@ -139,14 +132,16 @@ export default function AdminOrdersPage() {
                                     <ul className="space-y-1 text-sm list-disc list-inside pl-2 mb-4">
                                         {order.items.map(item => (
                                             <li key={item.id}>
-                                                {item.quantity}x {item.name} (${item.price.toFixed(2)} c/u)
+                                                 {/* Updated currency symbol */}
+                                                {item.quantity}x {item.name} (COP {item.price.toFixed(2)} c/u)
                                             </li>
                                         ))}
                                     </ul>
                                     <Separator className="my-2"/>
                                      <div className="flex justify-between font-bold text-md mt-2">
                                         <span>Total:</span>
-                                        <span>${order.total}</span>
+                                        {/* Updated currency symbol */}
+                                        <span>COP {order.total}</span>
                                     </div>
                                 </CardContent>
                                 <Separator />

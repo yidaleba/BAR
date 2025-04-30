@@ -9,18 +9,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { PlusCircle, ShoppingCart, MinusCircle, Trash2 } from 'lucide-react'; // Added MinusCircle, Trash2
 import { useToast } from "@/hooks/use-toast";
-import type { MenuItem, OrderItem } from '@/types/menu'; // Import shared types
+import type { MenuItem, OrderItem, PlacedOrder } from '@/types/menu'; // Import shared types
 
-// Define the structure of a placed order for storage
-interface PlacedOrder {
-  id: string; // Unique ID for the order
-  userName: string;
-  tableNumber: string;
-  items: OrderItem[];
-  total: string;
-  timestamp: number;
-  status: 'active' | 'completed'; // Add status field
-}
+// Define the structure of a placed order for storage - already imported via types/menu
 
 
 export default function MenuDisplay() {
@@ -151,7 +142,7 @@ export default function MenuDisplay() {
           userName: userName,
           tableNumber: tableNumber,
           items: order,
-          total: calculateTotal(),
+          total: calculateTotal(), // Total is calculated just before placing
           timestamp: Date.now(),
           status: 'active', // Initial status
       };
@@ -215,7 +206,8 @@ export default function MenuDisplay() {
                     </CardHeader>
                     <CardContent>
                       {item.description && <p className="text-sm text-muted-foreground mb-2">{item.description}</p>}
-                      <p className="text-lg font-semibold text-accent">${item.price.toFixed(2)}</p>
+                      {/* Updated currency symbol */}
+                      <p className="text-lg font-semibold text-accent">COP {item.price.toFixed(2)}</p>
                     </CardContent>
                     <CardFooter>
                       <Button onClick={() => addToOrder(item)} className="w-full bg-primary text-primary-foreground hover:bg-primary/90" size="sm">
@@ -254,9 +246,11 @@ export default function MenuDisplay() {
                     <li key={item.id} className="flex justify-between items-center text-sm group">
                        <div className="flex-grow mr-2"> {/* Added margin-right */}
                            <span>{item.quantity}x {item.name}</span>
-                           <span className="block text-xs text-muted-foreground">${item.price.toFixed(2)} c/u</span> {/* Show unit price */}
+                            {/* Updated currency symbol */}
+                           <span className="block text-xs text-muted-foreground">COP {item.price.toFixed(2)} c/u</span> {/* Show unit price */}
                        </div>
-                        <div className="font-medium mr-2">${(item.price * item.quantity).toFixed(2)}</div> {/* Item total price */}
+                        {/* Updated currency symbol */}
+                        <div className="font-medium mr-2">COP {(item.price * item.quantity).toFixed(2)}</div> {/* Item total price */}
                        <div className="flex items-center ml-auto opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"> {/* Prevent shrinking */}
                            <Button
                                 variant="ghost"
@@ -289,7 +283,8 @@ export default function MenuDisplay() {
                 <CardFooter className="flex flex-col items-stretch gap-4 pt-4">
                     <div className="flex justify-between font-bold text-lg">
                     <span>Total:</span>
-                    <span>${calculateTotal()}</span>
+                    {/* Updated currency symbol */}
+                    <span>COP {calculateTotal()}</span>
                     </div>
                     <Button onClick={placeOrder} className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
                     Realizar Pedido

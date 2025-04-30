@@ -30,7 +30,8 @@ export default function InventoryTable({ items, onDeleteItem }: InventoryTablePr
       <TableRow key={item.id}>
         <TableCell className="font-medium">{item.name}</TableCell>
         <TableCell className="text-muted-foreground">{item.description || '-'}</TableCell>
-        <TableCell className="text-right">${item.price.toFixed(2)}</TableCell>
+        {/* Updated currency symbol */}
+        <TableCell className="text-right">COP {item.price.toFixed(2)}</TableCell>
         <TableCell className="text-right">
           <Button
             variant="ghost"
