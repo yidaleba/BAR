@@ -4,21 +4,39 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input'; // Import Input
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"; // Import Card components
-import { ArrowLeft, PlusCircle, List } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { ArrowLeft, PlusCircle, List, Trash2 } from 'lucide-react';
 import menuData from '@/data/menu.json'; // Assuming menu.json is in src/data
-import { useToast } from "@/hooks/use-toast"; // Import useToast
+import { useToast } from "@/hooks/use-toast";
 
 export default function InventoryCategoriesPage() {
     const [categories, setCategories] = useState<string[]>([]);
     const [newCategory, setNewCategory] = useState<string>("");
-    const { toast } = useToast(); // Initialize toast
+    const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false); // State for dialog visibility
+    const { toast } = useToast();
 
     useEffect(() => {
-        // Extract unique categories from menu data and add the default "Cerveza"
+        // Extract unique categories from menu data
         const existingCategories = Array.from(new Set(menuData.items.map(item => item.category)));
-        const initialCategories = Array.from(new Set(["Cerveza", ...existingCategories])); // Ensure "Cerveza" is present
+        // Ensure "Cerveza" is present if it exists or is the only one
+        const initialCategories = existingCategories.length > 0 ? existingCategories : ["Cerveza"];
+        if (!initialCategories.includes("Cerveza") && !existingCategories.some(cat => cat.toLowerCase() === "cerveza")) {
+             // Add Cerveza if it wasn't in the data and data wasn't empty
+            // initialCategories.push("Cerveza"); // Let's not force "Cerveza" if not present initially
+        }
         setCategories(initialCategories.sort()); // Sort categories alphabetically
     }, []);
 
@@ -31,27 +49,67 @@ export default function InventoryCategoriesPage() {
             });
             return;
         }
-        if (categories.some(cat => cat.toLowerCase() === newCategory.trim().toLowerCase())) {
+        const trimmedCategory = newCategory.trim();
+        if (categories.some(cat => cat.toLowerCase() === trimmedCategory.toLowerCase())) {
              toast({
                 title: "Categoría Duplicada",
-                description: `La categoría "${newCategory.trim()}" ya existe.`,
+                description: `La categoría "${trimmedCategory}" ya existe.`,
                 variant: "destructive",
             });
             setNewCategory(""); // Clear input
             return;
         }
 
-        const addedCategory = newCategory.trim();
         // Simulate adding category (only in state, not persistent)
-        setCategories(prev => [...prev, addedCategory].sort()); // Add and sort
+        setCategories(prev => [...prev, trimmedCategory].sort()); // Add and sort
         setNewCategory(""); // Clear input
          toast({
             title: "Categoría Añadida (Simulado)",
-            description: `Categoría "${addedCategory}" añadida localmente.`,
+            description: `Categoría "${trimmedCategory}" añadida localmente.`,
         });
-         console.log("Simulating Add Category:", addedCategory); // Log simulation
+         console.log("Simulating Add Category:", trimmedCategory); // Log simulation
          // NOTE: Changes are NOT saved to menu.json here. This requires a backend.
+         // To persist, you'd need an API call here.
     };
+
+    const handleDeleteClick = (category: string) => {
+        setCategoryToDelete(category);
+        setIsDeleteDialogOpen(true); // Open the dialog
+    };
+
+    const handleConfirmDelete = () => {
+        if (!categoryToDelete) return;
+
+        // Simulate deleting category and its items (only in state/imported data, not persistent)
+        console.log("Simulating Delete Category:", categoryToDelete);
+
+        // 1. Remove category from the list state
+        setCategories(prev => prev.filter(cat => cat !== categoryToDelete));
+
+        // 2. (Simulation) Remove items of this category from the menuData object (runtime only)
+        const initialLength = menuData.items.length;
+        menuData.items = menuData.items.filter(item => item.category !== categoryToDelete);
+        const itemsRemovedCount = initialLength - menuData.items.length;
+
+
+        toast({
+            title: "Categoría Eliminada (Simulado)",
+            description: `Categoría "${categoryToDelete}" y sus ${itemsRemovedCount} productos asociados eliminados localmente.`,
+            variant: "destructive",
+        });
+
+        // Reset state
+        setIsDeleteDialogOpen(false);
+        setCategoryToDelete(null);
+         // NOTE: Changes are NOT saved to menu.json permanently. This requires a backend.
+         // To persist, you'd need an API call here to delete the category and its items.
+    };
+
+     const handleCancelDelete = () => {
+        setIsDeleteDialogOpen(false);
+        setCategoryToDelete(null);
+    };
+
 
     return (
         <div className="container mx-auto px-4 py-12">
@@ -90,7 +148,7 @@ export default function InventoryCategoriesPage() {
                 <Card className="md:col-span-2 shadow-md">
                     <CardHeader>
                         <CardTitle className="flex items-center"><List className="mr-2 h-5 w-5" /> Categorías Existentes</CardTitle>
-                         <CardDescription>Selecciona una categoría para gestionar sus productos.</CardDescription>
+                         <CardDescription>Selecciona una categoría para gestionar sus productos o elimínala.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         {categories.length === 0 ? (
@@ -98,13 +156,24 @@ export default function InventoryCategoriesPage() {
                         ) : (
                             <ul className="space-y-2">
                                 {categories.map((category) => (
-                                    <li key={category} className="group relative"> {/* Add group relative for positioning delete */}
-                                        <Link href={`/admin/inventory/${encodeURIComponent(category)}`} passHref legacyBehavior>
-                                             <Button variant="outline" className="w-full justify-start text-left h-auto py-3 pr-10"> {/* Add padding-right */}
+                                    <li key={category} className="group relative flex items-center justify-between"> {/* Use flex to align items */}
+                                        <Link href={`/admin/inventory/${encodeURIComponent(category)}`} passHref legacyBehavior className="flex-grow mr-2">
+                                             <Button variant="outline" className="w-full justify-start text-left h-auto py-3">
                                                 {category}
                                             </Button>
                                         </Link>
-                                         {/* Delete button removed */}
+                                         {/* Delete Button Trigger */}
+                                        <AlertDialogTrigger asChild>
+                                             <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="text-destructive hover:text-destructive/80 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" // Show on hover
+                                                onClick={() => handleDeleteClick(category)}
+                                                aria-label={`Eliminar categoría ${category}`}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </AlertDialogTrigger>
                                     </li>
                                 ))}
                             </ul>
@@ -112,7 +181,26 @@ export default function InventoryCategoriesPage() {
                     </CardContent>
                 </Card>
             </div>
-             {/* Delete Confirmation Dialog removed */}
+
+             {/* Delete Confirmation Dialog */}
+            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                    <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Esta acción no se puede deshacer. Esto eliminará permanentemente la categoría
+                        <span className="font-semibold"> "{categoryToDelete}" </span>
+                         y todos los productos asociados a ella.
+                    </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                    <AlertDialogCancel onClick={handleCancelDelete}>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        Eliminar
+                    </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

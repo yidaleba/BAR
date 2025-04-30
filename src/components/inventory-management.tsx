@@ -19,6 +19,7 @@ export default function InventoryManagement({ categoryName }: InventoryManagemen
 
   useEffect(() => {
     // Load and filter initial inventory data for the specific category
+    // Filter from the potentially modified menuData during runtime
     const categoryItems = menuData.items.filter(
         item => item.category.toLowerCase() === categoryName.toLowerCase()
     );
@@ -30,7 +31,11 @@ export default function InventoryManagement({ categoryName }: InventoryManagemen
   const handleAddItem = (newItemData: Omit<MenuItem, 'id' | 'category'>) => {
     // In a real app, this would send data to the backend to persist.
     // Here, we simulate adding by updating local state and logging.
-    const newId = Math.max(0, ...menuData.items.map(item => item.id), ...inventoryItems.map(item => item.id)) + 1; // Simple ID generation considering all items potentially
+    // Generate ID based on ALL items in menuData to avoid potential conflicts if items were added/removed in other categories
+    const newId = menuData.items.length > 0
+        ? Math.max(...menuData.items.map(item => item.id)) + 1
+        : 1; // Simple ID generation
+
     const itemToAdd: MenuItem = {
         ...newItemData,
         id: newId,
@@ -39,16 +44,17 @@ export default function InventoryManagement({ categoryName }: InventoryManagemen
 
     console.log("Simulating Add Item:", itemToAdd); // Log the action
 
-    // Add to local state for UI update
+    // Add to local state for UI update in this category view
     setInventoryItems(prevItems => [...prevItems, itemToAdd]);
+
+    // (Simulation) Add to the menuData object for runtime persistence across category views
+    menuData.items.push(itemToAdd);
 
     toast({
       title: "Producto Añadido (Simulado)",
-      description: `${newItemData.name} se ha añadido a la categoría ${categoryName} localmente.`,
+      description: `${newItemData.name} se ha añadido a la categoría "${categoryName}" localmente.`,
     });
-    // NOTE: Changes are NOT saved to menu.json here. This requires a backend.
-    // To make it reflect globally (in menuData simulation), you might push to menuData.items here.
-    // menuData.items.push(itemToAdd); // Example of modifying the imported data (only works during runtime)
+    // NOTE: Changes are NOT saved to menu.json file. This requires a backend.
   };
 
   // Function to delete an item (simulated)
@@ -58,18 +64,21 @@ export default function InventoryManagement({ categoryName }: InventoryManagemen
 
      const itemToDelete = inventoryItems.find(item => item.id === itemId);
 
-     // Remove from local state
+     // Remove from local state (this category's view)
      setInventoryItems(prevItems => prevItems.filter(item => item.id !== itemId));
+
+     // (Simulation) Remove from the menuData object for runtime persistence
+     const itemIndexGlobal = menuData.items.findIndex(item => item.id === itemId);
+     if (itemIndexGlobal > -1) {
+         menuData.items.splice(itemIndexGlobal, 1);
+     }
 
      toast({
        title: "Producto Eliminado (Simulado)",
-       description: `${itemToDelete?.name ?? 'El producto'} se ha eliminado de la categoría ${categoryName} localmente.`,
+       description: `${itemToDelete?.name ?? 'El producto'} (ID: ${itemId}) se ha eliminado de la categoría "${categoryName}" localmente.`,
        variant: "destructive"
      });
-      // NOTE: Changes are NOT saved to menu.json here. This requires a backend.
-      // To reflect globally, you would need to filter menuData.items as well.
-      // const itemIndex = menuData.items.findIndex(item => item.id === itemId);
-      // if (itemIndex > -1) menuData.items.splice(itemIndex, 1);
+      // NOTE: Changes are NOT saved to menu.json file. This requires a backend.
   };
 
   return (
