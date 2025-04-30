@@ -25,13 +25,14 @@ export default function InventoryCategoriesPage() {
     const [categories, setCategories] = useState<string[]>([]);
     const [newCategory, setNewCategory] = useState<string>("");
     const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
-    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false); // State for dialog visibility
+    // Removed isDeleteDialogOpen state as each dialog will manage its open state internally via AlertDialog's `open` prop based on which trigger is clicked.
+    // The AlertDialog component itself handles the open/closed state triggered by its trigger.
+    // We only need to know *which* category is targeted for deletion when confirming.
     const { toast } = useToast();
 
     useEffect(() => {
         // Extract unique categories from menu data
         const existingCategories = Array.from(new Set(menuData.items.map(item => item.category)));
-        // Ensure "Cerveza" is present if it exists or is the only one
         const initialCategories = existingCategories.length > 0 ? existingCategories : ["Cerveza"];
         if (!initialCategories.includes("Cerveza") && !existingCategories.some(cat => cat.toLowerCase() === "cerveza")) {
              // Add Cerveza if it wasn't in the data and data wasn't empty
@@ -73,8 +74,9 @@ export default function InventoryCategoriesPage() {
     };
 
     const handleDeleteClick = (category: string) => {
+        // Set the category to delete when the trigger button is clicked.
+        // The dialog opening is handled by the AlertDialog component itself.
         setCategoryToDelete(category);
-        setIsDeleteDialogOpen(true); // Open the dialog
     };
 
     const handleConfirmDelete = () => {
@@ -98,16 +100,17 @@ export default function InventoryCategoriesPage() {
             variant: "destructive",
         });
 
-        // Reset state
-        setIsDeleteDialogOpen(false);
+        // Reset state - No need to manage open state, just clear the targeted category
         setCategoryToDelete(null);
          // NOTE: Changes are NOT saved to menu.json permanently. This requires a backend.
          // To persist, you'd need an API call here to delete the category and its items.
+         // The dialog will close automatically on action/cancel click if not prevented.
     };
 
      const handleCancelDelete = () => {
-        setIsDeleteDialogOpen(false);
+        // Reset the targeted category when cancel is clicked.
         setCategoryToDelete(null);
+        // Dialog closes automatically.
     };
 
 
@@ -156,25 +159,48 @@ export default function InventoryCategoriesPage() {
                         ) : (
                             <ul className="space-y-2">
                                 {categories.map((category) => (
-                                    <li key={category} className="group relative flex items-center justify-between"> {/* Use flex to align items */}
-                                        <Link href={`/admin/inventory/${encodeURIComponent(category)}`} passHref legacyBehavior className="flex-grow mr-2">
-                                             <Button variant="outline" className="w-full justify-start text-left h-auto py-3">
-                                                {category}
-                                            </Button>
-                                        </Link>
-                                         {/* Delete Button Trigger */}
-                                        <AlertDialogTrigger asChild>
-                                             <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="text-destructive hover:text-destructive/80 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" // Show on hover
-                                                onClick={() => handleDeleteClick(category)}
-                                                aria-label={`Eliminar categoría ${category}`}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </AlertDialogTrigger>
-                                    </li>
+                                    // Wrap each list item's delete functionality in its own AlertDialog
+                                    <AlertDialog key={category}>
+                                        <li className="group relative flex items-center justify-between"> {/* Use flex to align items */}
+                                            <Link href={`/admin/inventory/${encodeURIComponent(category)}`} passHref legacyBehavior className="flex-grow mr-2">
+                                                <Button variant="outline" className="w-full justify-start text-left h-auto py-3">
+                                                    {category}
+                                                </Button>
+                                            </Link>
+                                            {/* Delete Button Trigger */}
+                                            <AlertDialogTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="text-destructive hover:text-destructive/80 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" // Show on hover
+                                                    onClick={() => handleDeleteClick(category)} // Set the category to delete when clicked
+                                                    aria-label={`Eliminar categoría ${category}`}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </AlertDialogTrigger>
+
+                                            {/* Delete Confirmation Dialog Content for this specific category */}
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        Esta acción no se puede deshacer. Esto eliminará permanentemente la categoría
+                                                        <span className="font-semibold"> "{category}" </span>
+                                                        y todos los productos asociados a ella.
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    {/* Cancel resets the categoryToDelete state */}
+                                                    <AlertDialogCancel onClick={handleCancelDelete}>Cancelar</AlertDialogCancel>
+                                                    {/* Action proceeds with deletion using categoryToDelete state */}
+                                                    <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                                        Eliminar
+                                                    </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </li>
+                                    </AlertDialog>
                                 ))}
                             </ul>
                         )}
@@ -182,25 +208,7 @@ export default function InventoryCategoriesPage() {
                 </Card>
             </div>
 
-             {/* Delete Confirmation Dialog */}
-            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                    <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Esta acción no se puede deshacer. Esto eliminará permanentemente la categoría
-                        <span className="font-semibold"> "{categoryToDelete}" </span>
-                         y todos los productos asociados a ella.
-                    </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                    <AlertDialogCancel onClick={handleCancelDelete}>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                        Eliminar
-                    </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+             {/* Dialog component moved inside the map loop */}
         </div>
     );
 }
